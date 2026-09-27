@@ -1,77 +1,60 @@
+from typing import Tuple, FrozenSet
 
+class GameState:
+    def __init__(self, agent_pos: Tuple[int, int], boxes: FrozenSet[Tuple[int, int]]):
+        self.agent_pos = agent_pos
+        self.boxes = boxes
 
-from dataclasses import dataclass
-from typing import FrozenSet, Tuple, List
+    def is_goal(self, goals: set) -> bool:
+        return self.boxes == frozenset(goals)
 
-Pos = Tuple[int, int]# (dr, dc) cho tung huong di chuyen
+    def __eq__(self, other):
+        if not isinstance(other, GameState):
+            return False
+        return self.agent_pos == other.agent_pos and self.boxes == other.boxes
 
- 
-DIRECTIONS = {        
+    def __hash__(self):
+        return hash((self.agent_pos, self.boxes))
+
+    def __repr__(self):
+        return f"GameState(agent={self.agent_pos}, boxes={set(self.boxes)})"
+
+# 4 huong di chuyen: Bac, Nam, Dong, Tay
+DIRECTIONS = {
     "North": (-1, 0),
     "South": (1, 0),
     "East": (0, 1),
     "West": (0, -1),
 }
 
-@dataclass(frozen=True) # Ép GameState thành kiểu dữ liệu bất biến
-
-
-class GameState:
-    """Lưu trữ state, bao gồm vị trí của agent và các box"""
-
-    agent: Pos # vi trí agent (row, col)
-    boxes: FrozenSet[Pos] # vì box bất biến, nên dùng frozenset để lưu trữ các vị trí box cũng như hashable
-
-    def is_goal(self, goals: FrozenSet[Pos]):  
-        return self.boxes == goals # nếu tất cả box đều ở vị trí goal thì state hiện tại là goal state
-
-
-def get_successors(state: GameState, grid):  
-    """
-    Sinh ra các state kế tiếp từ state hiện tại, cùng với action và cost ( = 1)
-    Return: List[Tuple[action, next_state, cost]]
-    """
-    walls = grid["walls"] # walls
-    successors = [] # danh sách các state kế tiếp, mỗi phần tử là tuple (action, next_state, cost)
+def get_successors(state: GameState, grid: dict):
+    successors = []
+    walls = grid["walls"]
+    agent_r, agent_c = state.agent_pos
+    boxes = set(state.boxes)
 
     for action, (dr, dc) in DIRECTIONS.items():
-        next_agent = (state.agent[0] + dr, state.agent[1] + dc) # tạo vị trí agent mới khi move
+        new_agent = (agent_r + dr, agent_c + dc)
 
-        if next_agent in walls:
-            continue  # tường chặn
+        # Di chuyen vao tuong
+        if new_agent in walls:
+            continue
 
-        if next_agent in state.boxes:
-            # ở trước có box thì cần kiểm tra xem box có thể đẩy được không
-            next_box = (next_agent[0] + dr, next_agent[1] + dc)
-            if next_box in walls or next_box in state.boxes:
-                continue  # bị chặn
+        # Day hop
+        if new_agent in boxes:
+            new_box = (new_agent[0] + dr, new_agent[1] + dc)
+            # Hop bi can boi tuong hoac hop khac
+            if new_box in walls or new_box in boxes:
+                continue
 
-            new_boxes = set(state.boxes) # tạo một tập hợp mới từ các vị trí box hiện tại
-            new_boxes.remove(next_agent) # loại bỏ box cũ
-            new_boxes.add(next_box)      # thêm box mới vào vị trí đẩy được
-            next_state = GameState(agent=next_agent, boxes=frozenset(new_boxes)) # tạo state mới với agent di chuyển và box di chuyn
+            new_boxes = set(boxes)
+            new_boxes.remove(new_agent)
+            new_boxes.add(new_box)
+            next_state = GameState(new_agent, frozenset(new_boxes))
+            successors.append((action, next_state, 1))
+        else:
+            # Di chuyen vao o trong
+            next_state = GameState(new_agent, state.boxes)
+            successors.append((action, next_state, 1))
 
-        else:# ô trống, AI có thể chỉ di chuyển 
-            next_state = GameState(agent=next_agent, boxes=state.boxes) # tạo state mới chỉ agent di chuyển, box không thay đổi
-
-        successors.append((action, next_state, 1)) # Thêm (action, next_state, cost = 1) vào list successors 
-
-    return successors 
-
-
-def apply_action(state: GameState, action: str, grid) -> GameState:
-    """trả về state mới sau khi action được áp dụng từ state hiện tại"""
-    for a, next_state, _ in get_successors(state, grid): # Duyệt qua tất cả các state kế tiếp
-        if a == action: # Nếu action trùng với action được sinh ra từ get_successors, trả về next_state tương ứng
-            return next_state
-    raise ValueError(f"Debug(Action): Action '{action}' không hợp lệ từ state {state}")
-
-"""Cái này dùng để tạo danh sách chuỗi trạng thái phục vụ tính năng phát lại, tua tới và tua lùi từng bước"""
-def reconstruct_states(initial_state: GameState, actions: List[str], grid) -> List[GameState]:
-    """với initial_state + list action, tái tạo lại toàn bộ chuỗi state đã đi qua."""
-    states = [initial_state]
-    current = initial_state
-    for a in actions:
-        current = apply_action(current, a, grid)
-        states.append(current)
-    return states
+    return successors
