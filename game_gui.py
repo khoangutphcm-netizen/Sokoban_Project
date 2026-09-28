@@ -158,18 +158,18 @@ class SokobanGame:
             pygame.draw.line(self.screen, (32, 42, 45), (0, y), (width, y), 1)
 
         left = max(48, width // 11)
-        self._text("PUZZLE / SEARCH", (left, 76), COLORS["accent"], self.small_font)
+        self._text("Introduction to AI Midterm Project", (left, 76), COLORS["accent"], self.small_font)
         self._text("SOKOBAN", (left - 4, 106), COLORS["white"], self.title_font)
-        self._text("A classic box-pushing puzzle", (left + 2, 184), (190, 201, 192), self.font)
-        self._text("SELECT MODE", (left + 2, 265), COLORS["accent"], self.small_font)
+        self._text("524H0101 - 524H0109 - 524H0098", (left + 2, 184), (190, 201, 192), self.font)
+        self._text(">> SELECT MODE <<", (left + 2, 265), COLORS["accent"], self.small_font)
 
         card_y = 294
         card_width = min(250, max(190, (width - 3 * left) // 2))
         card_height = 138
         gap = 18
         for index, (mode, title, note) in enumerate((
-            ("single", "ONE AGENT", "Search and replay a solution"),
-            ("two", "TWO AGENTS", "Interface slot for future play"),
+            ("single", "ONE AGENT", "req 1-4"),
+            ("two", "TWO AGENTS", "req 6-8"),
         )):
             card = pygame.Rect(left + index * (card_width + gap), card_y, card_width, card_height)
             selected = self.mode == mode
@@ -189,8 +189,8 @@ class SokobanGame:
         preview = pygame.Rect(width - preview_width - max(48, width // 12), 190, preview_width, min(390, height - 250))
         pygame.draw.rect(self.screen, (31, 41, 44), preview.inflate(24, 24), border_radius=10)
         self._draw_board(preview)
-        self._text("CURRENT LAYOUT", (preview.x, preview.bottom + 28), COLORS["accent"], self.small_font)
-        self._text("Use the sidebar in game to change map or mode.", (preview.x, preview.bottom + 54), (177, 188, 180), self.small_font)
+        self._text("[CURRENT MAP]", (preview.x, preview.bottom + 28), COLORS["accent"], self.small_font)
+        self._text("> [You can change map in-gamegame] <", (preview.x, preview.bottom + 54), (177, 188, 180), self.small_font)
 
     def _draw_sidebar(self, panel):
         pygame.draw.rect(self.screen, COLORS["panel"], panel)
