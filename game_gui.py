@@ -46,9 +46,13 @@ def lerp(start: float, end: float, t: float) -> float:
 class SokobanGame:
     def __init__(self, map_path: Path):
         pygame.init()
-        pygame.display.set_caption("Sokoban - 120 FPS High Quality")
-        
-        self.screen = pygame.display.set_mode((1160, 800), pygame.RESIZABLE | pygame.DOUBLEBUF)
+        pygame.display.set_caption("Sokoban")
+        display = pygame.display.Info()
+        desktop_width = display.current_w or 1280
+        desktop_height = display.current_h or 800
+        window_width = min(1920, max(min(900, desktop_width), int(desktop_width * 0.96)))
+        window_height = min(1200, max(min(640, desktop_height), int(desktop_height * 0.92)))
+        self.screen = pygame.display.set_mode((window_width, window_height), pygame.RESIZABLE | pygame.DOUBLEBUF)
         self.clock = pygame.time.Clock()
         
         # Font chữ khử răng cưa
@@ -142,7 +146,7 @@ class SokobanGame:
     def _draw_board(self, area):
         rows = self.grid["height"]
         columns = self.grid["width"]
-        tile = max(36, min(122, area.width // max(1, columns), area.height // max(1, rows)))
+        tile = max(1, min(160, area.width // max(1, columns), area.height // max(1, rows)))
         board_width, board_height = columns * tile, rows * tile
         origin_x = area.x + (area.width - board_width) // 2
         origin_y = area.y + (area.height - board_height) // 2
@@ -270,24 +274,25 @@ class SokobanGame:
         self._text("Solver Setup", (x, panel.y + 40), COLORS["text"], self.heading_font)
         self._button("sidebar_close", "<", pygame.Rect(panel.right - 40, panel.y + 16, 26, 26), small=True)
 
-        mode_y = panel.y + 86
+        compact = panel.height < 700
+        mode_y = panel.y + (68 if compact else 86)
         self._text("MODE", (x, mode_y), COLORS["muted"], self.small_font)
         option_width = (inner_width - 8) // 2
         self._button("mode_single", "Single", pygame.Rect(x, mode_y + 22, option_width, 34), active=self.mode == "single", small=True)
         self._button("mode_two", "Two-Agent", pygame.Rect(x + option_width + 8, mode_y + 22, option_width, 34), active=self.mode == "two", small=True)
 
-        map_y = mode_y + 70
+        map_y = mode_y + (62 if compact else 70)
         self._text("MAP FILE", (x, map_y), COLORS["muted"], self.small_font)
         self._text(self.map_path.name, (x, map_y + 20), COLORS["text"], self.small_font)
         self._button("change_map", "Change Map...", pygame.Rect(x, map_y + 44, inner_width, 32), small=True)
 
-        algo_y = map_y + 90
+        algo_y = map_y + (82 if compact else 90)
         self._text("ALGORITHM", (x, algo_y), COLORS["muted"], self.small_font)
         self._button("algo_ucs", "UCS", pygame.Rect(x, algo_y + 22, option_width, 34), active=self.algorithm == "UCS", small=True)
         self._button("algo_astar", "A* (Hungarian)", pygame.Rect(x + option_width + 8, algo_y + 22, option_width, 34), active=self.algorithm == "A*", small=True)
         self._button("solve", "Solve Puzzle", pygame.Rect(x, algo_y + 64, inner_width, 38), active=True, small=True)
 
-        stats_y = algo_y + 118
+        stats_y = algo_y + (110 if compact else 118)
         pygame.draw.line(self.screen, (218, 221, 209), (x, stats_y), (x + inner_width, stats_y), 1)
         self._text("METRICS", (x, stats_y + 10), COLORS["muted"], self.small_font)
         self._text(f"Action Step:    {self.action_index} / {len(self.actions)}", (x, stats_y + 32), COLORS["text"], self.small_font)
@@ -296,7 +301,7 @@ class SokobanGame:
         visited_str = "-" if self.visited is None else f"{self.visited:,}"
         self._text(f"Explored Nodes: {visited_str}", (x, stats_y + 76), COLORS["text"], self.small_font)
 
-        controls_y = panel.bottom - 110
+        controls_y = panel.bottom - (100 if compact else 110)
         self._button("play_pause", "Pause" if self.playing else "Auto Play", pygame.Rect(x, controls_y, inner_width, 36), active=self.playing, small=True)
         half = (inner_width - 8) // 2
         self._button("step_back", "Previous", pygame.Rect(x, controls_y + 42, half, 32), small=True)
