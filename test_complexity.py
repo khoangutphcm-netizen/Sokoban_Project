@@ -1,9 +1,6 @@
-"""Empirically compare UCS and A* runtime and memory on the same Sokoban map.
-
-Repeated runs and medians reduce timing noise. Peak traced Python memory is
-measured separately from runtime; visited states are reported as an additional
-search-effort metric, not as a direct measurement of space complexity. Use maps
-of increasing difficulty to study scaling rather than infer Big-O from one map.
+"""
+CHẠY BẰNG DÒNG NÀY:
+python -m unittest test_complexity.py
 """
 
 import statistics
@@ -13,10 +10,11 @@ import unittest
 from pathlib import Path
 
 from core.map_loader import load_map
-from core.search import a_star_search, uniform_cost_search
+from search.astar import a_star_search
+from search.ucs import uniform_cost_search
 
 
-MAP_PATH = Path(__file__).resolve().parent / "core" / "example_map.txt"
+MAP_PATH = Path(__file__).resolve().parent / "example_map.txt"
 REPETITIONS = 5
 ALGORITHMS = (
     ("UCS", uniform_cost_search),
