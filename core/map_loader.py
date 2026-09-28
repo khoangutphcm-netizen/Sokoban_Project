@@ -52,7 +52,7 @@ def load_map(path: str):
         "walls": walls,
         "goals": goals,
         "width": width,
-        "height": height
+        "height": height,
     }
 
     initial_state = GameState(agent_pos=agent_pos, boxes=frozenset(boxes))
